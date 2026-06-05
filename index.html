@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Your Name — Creative Developer & Designer. Building digital experiences that make people feel something." />
+  <meta name="theme-color" content="#080808" />
+  <title>Your Name — Creative Developer</title>
+
+  <!-- Preconnect for speed -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Fonts: Bebas Neue (display) + Cormorant Garamond (serif/italic) + DM Mono (mono) -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  
+  <!-- Lenis smooth scroll (CDN) -->
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+  <!-- Stylesheets — order matters -->
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/preloader.css" />
+  <link rel="stylesheet" href="css/hero.css" />
+  <link rel="stylesheet" href="css/about.css" />
+  <link rel="stylesheet" href="css/work.css" />
+  <link rel="stylesheet" href="css/contact.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       CURSOR
+       Custom cursor: dot + lagging ring with stretch/squash
+  ============================================================ -->
+  <div id="cursor" aria-hidden="true"></div>
+  <div id="cursor-ring" aria-hidden="true"></div>
+
+  <!-- ============================================================
+       PRELOADER
+       Letters assemble → progress bar fills → slam reveal
+  ============================================================ -->
+  <div id="preloader" aria-hidden="true">
+    <div id="preloader-inner">
+      <div id="name-wrap">
+        <!-- Letters injected by preloader.js -->
+      </div>
+      <div id="loader-bar-wrap">
+        <div id="loader-bar">
+          <div id="loader-fill"></div>
+        </div>
+        <span id="loader-percent">0%</span>
+      </div>
+      <p id="preloader-role">Creative Developer &amp; Designer</p>
+    </div>
+  </div>
+
+  <!-- Slam bar — the dramatic reveal wipe -->
+  <div id="slam-bar" aria-hidden="true"></div>
+
+  <!-- ============================================================
+       SITE WRAPPER
+       Everything the user actually sees lives here
+  ============================================================ -->
+  <div id="site">
+
+
+    <!-- ── HERO ── -->
+  <section id="hero" aria-label="Hero">
+
+    <canvas id="three-canvas" aria-hidden="true"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <div class="logo" id="logo">AB</div>
+      <ul class="nav-links" id="nav" role="list">
+        <li><a href="#work">Work</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="avail" id="avail">
+        <span class="avdot"></span>
+        <span class="avtext">Available for hire</span>
+      </div>
+      <div id="hamburger" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+    <div class="avail-mobile">
+      <span class="avdot"></span>
+      <span class="avtext">Available for hire</span>
+    </div>
+
+    <!-- HEADLINE -->
+    <div class="headline-wrap">
+      <span class="hl-row"><span class="hl-line l1" id="l1">BUILDING</span></span>
+      <span class="hl-row"><span class="hl-line l2" id="l2">intelligent</span></span>
+      <span class="hl-row"><span class="hl-line l3" id="l3">SYSTEMS.</span></span>
+      <div class="subtitle" id="sub">
+        <span class="sub-line"></span>
+        AI Engineer · Full-Stack Developer
+        <span class="sub-line"></span>
+      </div>
+    </div>
+
+    <!-- MARQUEE -->
+    <div class="mstrip" id="mstrip" aria-hidden="true">
+      <div class="mtrack" id="mtrack"></div>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="bottom-bar">
+      <div class="bl" id="bl">
+        <p class="role">AI Engineer · Full-Stack Developer</p>
+        <p class="since">Building intelligent systems since 2023</p>
+      </div>
+      <div class="bc" id="bc">
+        <div class="sline"></div>
+        <span class="slabel">Scroll</span>
+      </div>
+      <div class="br" id="br">
+        <a href="#work" class="cta">
+          <span>See my work</span>
+          <span class="arr">↗</span>
+        </a>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- MOBILE MENU -->
+  <div id="mobile-menu" aria-hidden="true">
+    <span id="mobile-menu-close" aria-label="Close menu">×</span>
+    <a href="#work">Work</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </div>
+
+    <!-- ── WORK ── -->
+    <section id="work" aria-label="Selected Work">
+
+      <div class="work-header">
+        <p class="section-label">
+          <span class="label-line"></span>
+          Selected Work
+        </p>
+        <span class="work-counter" id="work-counter" aria-live="polite">01 / 05</span>
+      </div>
+
+      <!-- Left index lines -->
+      <div class="work-index" aria-hidden="true" id="work-index">
+        <div class="idx-line active" data-idx="0"></div>
+        <div class="idx-line" data-idx="1"></div>
+        <div class="idx-line" data-idx="2"></div>
+        <div class="idx-line" data-idx="3"></div>
+        <div class="idx-line" data-idx="4"></div>
+      </div>
+
+      <!-- Drag hint -->
+      <div class="drag-hint" id="drag-hint" aria-hidden="true">
+        <span>←</span>
+        drag to explore
+        <span>→</span>
+      </div>
+
+      <!-- Cards track -->
+      <div class="cards-viewport" id="cards-viewport">
+        <div class="cards-track" id="cards-track">
+          <!-- Cards injected by work.js -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── ABOUT ── -->
+    <section id="about" aria-label="About">
+
+      <!-- Pin container — creates the scroll distance -->
+      <div id="about-pin-container">
+        <div id="about-sticky">
+
+          <!-- Left: visual panel -->
+          <div id="about-visual-panel">
+            <div class="about-visual-bg" id="about-visual-bg"></div>
+            <canvas id="about-canvas" aria-hidden="true"></canvas>
+            <div class="about-visual-overlay" aria-hidden="true"></div>
+
+            <p class="about-panel-tag">
+              <span class="tag-line"></span>
+              About
+            </p>
+            <div class="about-panel-number" id="about-panel-num" aria-hidden="true">01</div>
+
+            <div class="about-stage-labels" aria-hidden="true">
+              <span class="stage-lbl" id="slbl-0">Origin</span>
+              <span class="stage-lbl" id="slbl-1">Practice</span>
+              <span class="stage-lbl" id="slbl-2">Vision</span>
+              <span class="stage-lbl" id="slbl-3">Craft</span>
+            </div>
+          </div>
+
+          <!-- Right: content panel -->
+          <div id="about-content-panel">
+
+            <!-- Progress rail -->
+            <div class="about-progress-rail" aria-hidden="true">
+              <div class="about-progress-fill" id="about-progress-fill"></div>
+            </div>
+
+            <!-- Stage dots -->
+            <div class="about-stage-dots" aria-hidden="true" id="about-stage-dots">
+              <button class="sdot active" data-stage="0" aria-label="Stage 1"></button>
+              <button class="sdot" data-stage="1" aria-label="Stage 2"></button>
+              <button class="sdot" data-stage="2" aria-label="Stage 3"></button>
+              <button class="sdot" data-stage="3" aria-label="Stage 4"></button>
+            </div>
+
+            <!-- Stage 0: Origin -->
+            <div class="about-stage active" id="astage-0" aria-hidden="false">
+              <p class="stage-eyebrow">
+                <span class="eyebrow-line"></span>
+                Origin
+              </p>
+              <p class="stage-scrub-text" id="scrub-text-0"></p>
+              <div class="stage-stats" id="stage-stats-0">
+                <div class="stat-item">
+                  <div class="stat-num" data-target="6" data-suffix="+">0+</div>
+                  <p class="stat-label">Years deep</p>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-num" data-target="48" data-suffix="+">0+</div>
+                  <p class="stat-label">Projects shipped</p>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-num" data-target="12" data-suffix="">0</div>
+                  <p class="stat-label">Countries reached</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage 1: Manifesto -->
+            <div class="about-stage" id="astage-1" aria-hidden="true">
+              <div class="manifesto-lines">
+                <div class="mline">I DON'T</div>
+                <div class="mline">BUILD</div>
+                <div class="mline accent-line">WEBSITES.</div>
+                <div class="mline">I BUILD BELIEF.</div>
+              </div>
+              <p class="manifesto-sub">— every line of code is a deliberate choice</p>
+            </div>
+
+            <!-- Stage 2: Practice -->
+            <div class="about-stage" id="astage-2" aria-hidden="true">
+              <p class="stage-eyebrow">
+                <span class="eyebrow-line"></span>
+                Practice
+              </p>
+              <p class="stage-scrub-text" id="scrub-text-2"></p>
+            </div>
+
+            <!-- Stage 3: Craft / Skills -->
+            <div class="about-stage" id="astage-3" aria-hidden="true">
+              <p class="stage-eyebrow">
+                <span class="eyebrow-line"></span>
+                Craft
+              </p>
+              <div class="skills-list" id="skills-list">
+                <div class="skill-row" style="--skill-w:95%"><span class="skill-name">Creative Development</span><div class="skill-bar-wrap"><div class="skill-bar"></div></div></div>
+                <div class="skill-row" style="--skill-w:90%"><span class="skill-name">UI / UX Design</span><div class="skill-bar-wrap"><div class="skill-bar"></div></div></div>
+                <div class="skill-row" style="--skill-w:88%"><span class="skill-name">Motion Design</span><div class="skill-bar-wrap"><div class="skill-bar"></div></div></div>
+                <div class="skill-row" style="--skill-w:80%"><span class="skill-name">WebGL / Three.js</span><div class="skill-bar-wrap"><div class="skill-bar"></div></div></div>
+                <div class="skill-row" style="--skill-w:84%"><span class="skill-name">Brand Identity</span><div class="skill-bar-wrap"><div class="skill-bar"></div></div></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── CONTACT ── -->
+    <section id="contact" aria-label="Contact">
+
+      <!-- Ambient canvas — time-of-day background -->
+      <canvas id="ambient-canvas" aria-hidden="true"></canvas>
+
+      <div class="contact-inner">
+
+        <!-- Gravity headline -->
+        <div class="contact-headline-wrap" id="contact-headline-wrap">
+          <p class="contact-eyebrow">
+            <span class="eyebrow-line"></span>
+            Let's create something
+          </p>
+          <div class="contact-headline" id="contact-headline">
+            <span class="gword" data-delay="0">LET'S</span>
+            <span class="gword stroke-gword" data-delay="120">TALK</span>
+            <span class="gword serif-gword" data-delay="240">soon.</span>
+          </div>
+          <div class="contact-avail">
+            <span class="contact-avail-dot"></span>
+            <span class="contact-avail-label">Open for work — 2026</span>
+            <a class="contact-email" href="mailto:ayobamibolade01@gmail.com">hello@ayobamibolade.com</a>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <form class="contact-form" id="contact-form" novalidate>
+          <div class="form-row">
+            <div class="form-field" data-field="name">
+              <label class="field-lbl" for="f-name">Your name</label>
+              <input class="field-input" id="f-name" name="name" type="text" autocomplete="off" />
+              <div class="field-underline"></div>
+            </div>
+            <div class="form-field" data-field="email">
+              <label class="field-lbl" for="f-email">Email address</label>
+              <input class="field-input" id="f-email" name="email" type="email" autocomplete="off" />
+              <div class="field-underline"></div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field" data-field="type">
+              <label class="field-lbl" for="f-type">Project type</label>
+              <input class="field-input" id="f-type" name="type" type="text" autocomplete="off" />
+              <div class="field-underline"></div>
+            </div>
+            <div class="form-field" data-field="budget">
+              <label class="field-lbl" for="f-budget">Budget range</label>
+              <input class="field-input" id="f-budget" name="budget" type="text" autocomplete="off" />
+              <div class="field-underline"></div>
+            </div>
+          </div>
+          <div class="form-row form-row--full">
+            <div class="form-field form-field--full" data-field="message">
+              <label class="field-lbl" for="f-message">Tell me about your project</label>
+              <textarea class="field-input field-textarea" id="f-message" name="message" maxlength="600"></textarea>
+              <div class="field-underline"></div>
+              <span class="field-charcount" id="field-charcount">0 / 600</span>
+            </div>
+          </div>
+          <div class="form-submit-row">
+            <p class="form-note">Response within 24 hours.<br>Let's build something people can't forget.</p>
+            <button class="submit-btn" id="submit-btn" type="submit">
+              <span class="submit-fill" id="submit-fill"></span>
+              <span class="submit-text" id="submit-text">Send message</span>
+              <span class="submit-arrow" aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer id="site-footer" role="contentinfo">
+      <div class="footer-ghost" aria-hidden="true">AYOBAMI BOLADE</div>
+      <div class="footer-grid">
+        <div class="footer-col">
+          <p class="footer-col-label">Connect</p>
+          <a class="footer-link" href="#" target="_blank" rel="noopener">Instagram</a>
+          <a class="footer-link" href="#" target="_blank" rel="noopener">Behance</a>
+          <a class="footer-link" href="#" target="_blank" rel="noopener">Dribbble</a>
+          <a class="footer-link" href="#" target="_blank" rel="noopener">LinkedIn</a>
+        </div>
+        <div class="footer-col">
+          <p class="footer-col-label">Navigate</p>
+          <a class="footer-link" href="#work">Work</a>
+          <a class="footer-link" href="#about">About</a>
+          <a class="footer-link" href="#contact">Contact</a>
+        </div>
+        <div class="footer-col footer-col--statement">
+          <p class="footer-statement">
+            Building things that make people feel <em>something.</em>
+          </p>
+        </div>
+      </div>
+      <div class="footer-credits">
+        <span>© 2026 Ayobami Bolade. All rights reserved.</span>
+        <span>Designed &amp; built with intention. Lagos, NG.</span>
+      </div>
+    </footer>
+
+  </div><!-- /#site -->
+
+  <!-- ============================================================
+       SCRIPTS — deferred, bottom of body
+  ============================================================ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/cursor.js"     defer></script>
+  <script src="js/preloader.js"  defer></script>
+  <script src="js/lenis.js"      defer></script>
+  <script src="js/hero.js"       defer></script>
+  <script src="js/work.js"       defer></script>
+  <script src="js/about.js"      defer></script>
+  <script src="js/contact.js"    defer></script>
+  <script src="js/mobile.js"     defer></script>
+
+</body>
+</html>

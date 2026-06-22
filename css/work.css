@@ -112,12 +112,12 @@
   transition: border-color 0.5s var(--ease-out-expo);
 }
 .proj-card:hover {
-  border-color: rgba(201, 168, 76, 0.28);
+  border-color: rgba(45, 226, 230, 0.28);
 }
 .proj-card.featured {
   width: 500px;
   height: 74vh;
-  border-color: rgba(201, 168, 76, 0.15);
+  border-color: rgba(45, 226, 230, 0.15);
 }
 
 /* Canvas visual */
@@ -215,7 +215,7 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   padding: 3px 9px;
-  border: 1px solid rgba(201, 168, 76, 0.28);
+  border: 1px solid rgba(45, 226, 230, 0.28);
   color: var(--amber);
 }
 

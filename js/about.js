@@ -1,5 +1,6 @@
 /* ============================================================
-   about.js — Organic living 3D objects per stage
+   about.js — Interactive particle orb + scroll-driven story
+   Drag to rotate · move the cursor to part the field
    ============================================================ */
 (function () {
   'use strict';
@@ -68,7 +69,7 @@
 
   const scene  = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, initW / initH, 0.1, 1000);
-  camera.position.z = 4.5;
+  camera.position.z = 4.8;
 
   window.addEventListener('resize', () => {
     const { w, h } = getSize();
@@ -77,408 +78,229 @@
     camera.updateProjectionMatrix();
   });
 
-  /* Shared color */
-  const GREEN = 0xAAFF4D;
-  const GREEN_BRIGHT = 0xCCFF88;
+  /* Cyan accent */
+  const CYAN        = 0x2DE2E6;
+  const baseR = 45/255, baseG = 226/255, baseB = 230/255;
 
   /* ══════════════════════════════════════════
-     STAGE 0 — BREATHING MORPHING BLOB
-     A sphere whose vertices breathe with noise
+     INTERACTIVE PARTICLE ORB
+     A fibonacci-sphere of particles. The cursor repels nearby
+     points (they spring back); drag orbits the whole field.
   ══════════════════════════════════════════ */
-  function makeBlob() {
-    const group = new THREE.Group();
-    const geo   = new THREE.SphereGeometry(1.4, 64, 64);
-    const posAttr = geo.attributes.position;
-    const count   = posAttr.count;
+  const COUNT  = window.innerWidth <= 768 ? 900 : 1600;
+  const RADIUS = 1.7;
+  const golden = Math.PI * (3 - Math.sqrt(5));
 
-    /* Store original positions */
-    const origins = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) origins[i] = posAttr.array[i];
+  /* Deterministic jitter — organic but stable across frames */
+  function jit(n) { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); }
 
-    const mat = new THREE.MeshBasicMaterial({
-      color:     GREEN,
-      wireframe: true,
-      transparent: true,
-      opacity:   0.45,
-    });
-    const mesh = new THREE.Mesh(geo, mat);
-    group.add(mesh);
-
-    /* Inner solid glow sphere */
-    const innerGeo = new THREE.SphereGeometry(1.35, 32, 32);
-    const innerMat = new THREE.MeshBasicMaterial({
-      color: GREEN,
-      transparent: true,
-      opacity: 0.04,
-    });
-    group.add(new THREE.Mesh(innerGeo, innerMat));
-
-    /* Noise helper */
-    function noise(x, y, z, t) {
-      return Math.sin(x * 2.1 + t) * Math.cos(y * 1.8 + t * 0.7) * Math.sin(z * 2.3 + t * 1.1);
-    }
-
-    group._update = function(t) {
-      for (let i = 0; i < count; i++) {
-        const ox = origins[i*3], oy = origins[i*3+1], oz = origins[i*3+2];
-        const n  = noise(ox, oy, oz, t * 0.6) * 0.28;
-        posAttr.array[i*3]   = ox + ox * n;
-        posAttr.array[i*3+1] = oy + oy * n;
-        posAttr.array[i*3+2] = oz + oz * n;
-      }
-      posAttr.needsUpdate = true;
-      geo.computeVertexNormals();
-    };
-
-    return group;
-  }
-
-  /* ══════════════════════════════════════════
-     STAGE 1 — DNA DOUBLE HELIX
-     Two strands rotating and unravelling
-  ══════════════════════════════════════════ */
-  function makeDNA() {
-    const group  = new THREE.Group();
-    const POINTS = 120;
-    const HEIGHT = 4;
-    const RADIUS = 0.7;
-    const TURNS  = 3;
-
-    /* Strand points — updated every frame */
-    const strandA = [], strandB = [];
-    for (let i = 0; i < POINTS; i++) {
-      strandA.push(new THREE.Vector3());
-      strandB.push(new THREE.Vector3());
-    }
-
-    /* Strand A geometry */
-    const geoA = new THREE.BufferGeometry().setFromPoints(strandA);
-    const matA = new THREE.LineBasicMaterial({ color: GREEN, transparent: true, opacity: 0.9 });
-    const lineA = new THREE.Line(geoA, matA);
-    group.add(lineA);
-
-    /* Strand B geometry */
-    const geoB = new THREE.BufferGeometry().setFromPoints(strandB);
-    const matB = new THREE.LineBasicMaterial({ color: GREEN_BRIGHT, transparent: true, opacity: 0.7 });
-    const lineB = new THREE.Line(geoB, matB);
-    group.add(lineB);
-
-    /* Rungs between strands */
-    const rungGroup = new THREE.Group();
-    group.add(rungGroup);
-
-    /* Dots on each strand */
-    const dotMatA = new THREE.PointsMaterial({ color: GREEN,       size: 0.06, transparent: true, opacity: 0.9, sizeAttenuation: true });
-    const dotMatB = new THREE.PointsMaterial({ color: GREEN_BRIGHT, size: 0.06, transparent: true, opacity: 0.7, sizeAttenuation: true });
-    const dotGeoA = new THREE.BufferGeometry().setFromPoints(strandA);
-    const dotGeoB = new THREE.BufferGeometry().setFromPoints(strandB);
-    group.add(new THREE.Points(dotGeoA, dotMatA));
-    group.add(new THREE.Points(dotGeoB, dotMatB));
-
-    group._update = function(t) {
-      /* Update strand positions */
-      for (let i = 0; i < POINTS; i++) {
-        const frac  = i / (POINTS - 1);
-        const y     = (frac - 0.5) * HEIGHT;
-        const angle = frac * Math.PI * 2 * TURNS + t * 0.4;
-        strandA[i].set(Math.cos(angle) * RADIUS, y, Math.sin(angle) * RADIUS);
-        strandB[i].set(Math.cos(angle + Math.PI) * RADIUS, y, Math.sin(angle + Math.PI) * RADIUS);
-      }
-
-      geoA.setFromPoints(strandA);
-      geoB.setFromPoints(strandB);
-      dotGeoA.setFromPoints(strandA);
-      dotGeoB.setFromPoints(strandB);
-
-      /* Rebuild rungs every frame */
-      while (rungGroup.children.length) rungGroup.remove(rungGroup.children[0]);
-      for (let i = 0; i < POINTS; i += 6) {
-        const rungGeo = new THREE.BufferGeometry().setFromPoints([strandA[i], strandB[i]]);
-        const rung    = new THREE.Line(rungGeo, new THREE.LineBasicMaterial({ color: GREEN, transparent: true, opacity: 0.25 }));
-        rungGroup.add(rung);
-      }
-    };
-
-    return group;
-  }
-
-  /* ══════════════════════════════════════════
-     STAGE 2 — MURMURATION
-     Particles flocking like birds
-  ══════════════════════════════════════════ */
-  function makeMurmuration() {
-    const group = new THREE.Group();
-    const COUNT = window.innerWidth <= 768 ? 300 : 600;
-    const pos   = new Float32Array(COUNT * 3);
-    const vel   = [];
-
+  /* ── SHAPE GENERATORS — each fills `out` with COUNT xyz targets ── */
+  function shapeSphere(out) {
     for (let i = 0; i < COUNT; i++) {
-      pos[i*3]   = (Math.random() - 0.5) * 4;
-      pos[i*3+1] = (Math.random() - 0.5) * 3;
-      pos[i*3+2] = (Math.random() - 0.5) * 2;
-      vel.push(new THREE.Vector3(
-        (Math.random() - 0.5) * 0.02,
-        (Math.random() - 0.5) * 0.02,
-        (Math.random() - 0.5) * 0.01
-      ));
+      const y = 1 - (i / (COUNT - 1)) * 2;
+      const r = Math.sqrt(Math.max(0, 1 - y*y));
+      const th = golden * i;
+      out[i*3]   = Math.cos(th) * r * RADIUS;
+      out[i*3+1] = y * RADIUS;
+      out[i*3+2] = Math.sin(th) * r * RADIUS;
     }
-
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
-
-    const mat = new THREE.PointsMaterial({
-      color: GREEN, size: 0.04,
-      transparent: true, opacity: 0.85, sizeAttenuation: true
-    });
-    const points = new THREE.Points(geo, mat);
-    group.add(points);
-
-    /* Centre attractor that moves */
-    let cx = 0, cy = 0, cz = 0;
-
-    group._update = function(t) {
-      /* Move attractor in a figure-8 */
-      cx = Math.sin(t * 0.3) * 1.2;
-      cy = Math.sin(t * 0.2) * 0.8;
-      cz = Math.cos(t * 0.25) * 0.5;
-
-      for (let i = 0; i < COUNT; i++) {
-        const px = pos[i*3], py = pos[i*3+1], pz = pos[i*3+2];
-
-        /* Attraction toward centre */
-        const dx = cx - px, dy = cy - py, dz = cz - pz;
-        const dist = Math.sqrt(dx*dx + dy*dy + dz*dz) + 0.001;
-        const force = 0.0006 / dist;
-        vel[i].x += dx * force;
-        vel[i].y += dy * force;
-        vel[i].z += dz * force;
-
-        /* Noise turbulence */
-        vel[i].x += (Math.sin(px * 3 + t) * 0.0008);
-        vel[i].y += (Math.cos(py * 2.5 + t * 0.8) * 0.0008);
-        vel[i].z += (Math.sin(pz * 2 + t * 0.6) * 0.0005);
-
-        /* Speed limit */
-        const speed = vel[i].length();
-        if (speed > 0.025) vel[i].multiplyScalar(0.025 / speed);
-
-        pos[i*3]   += vel[i].x;
-        pos[i*3+1] += vel[i].y;
-        pos[i*3+2] += vel[i].z;
-
-        /* Soft boundary */
-        if (Math.abs(pos[i*3])   > 2.8) vel[i].x *= -0.6;
-        if (Math.abs(pos[i*3+1]) > 2.2) vel[i].y *= -0.6;
-        if (Math.abs(pos[i*3+2]) > 1.5) vel[i].z *= -0.6;
-      }
-      geo.attributes.position.needsUpdate = true;
-    };
-
-    return group;
+  }
+  function shapeTorus(out) {
+    const R = 1.3, tr = 0.55;
+    for (let i = 0; i < COUNT; i++) {
+      const a = (i / COUNT) * Math.PI * 2;   /* around the ring */
+      const b = golden * i;                  /* around the tube */
+      const rr = R + tr * Math.cos(b);
+      out[i*3]   = Math.cos(a) * rr;
+      out[i*3+1] = tr * Math.sin(b);
+      out[i*3+2] = Math.sin(a) * rr;
+    }
+  }
+  function shapeHelix(out) {
+    const turns = 3, H = 3.6, rad = 0.8, half = Math.floor(COUNT / 2);
+    for (let i = 0; i < COUNT; i++) {
+      const onA = i < half;
+      const idx = onA ? i : i - half;
+      const n   = onA ? half : (COUNT - half);
+      const frac = idx / (n - 1 || 1);
+      const ang  = frac * Math.PI * 2 * turns + (onA ? 0 : Math.PI);
+      out[i*3]   = Math.cos(ang) * rad;
+      out[i*3+1] = (frac - 0.5) * H;
+      out[i*3+2] = Math.sin(ang) * rad;
+    }
+  }
+  function shapeGalaxy(out) {
+    const arms = 3, spin = 3.2, rmax = 2.05;
+    for (let i = 0; i < COUNT; i++) {
+      const frac = i / COUNT;
+      const dist = Math.pow(frac, 0.6) * rmax;
+      const arm  = (i % arms) / arms * Math.PI * 2;
+      const ang  = dist * spin + arm + jit(i) * 0.5;
+      const thick = (1 - frac) * 0.35;
+      out[i*3]   = Math.cos(ang) * dist + (jit(i+1) - 0.5) * 0.15;
+      out[i*3+1] = (jit(i+2) - 0.5) * thick;
+      out[i*3+2] = Math.sin(ang) * dist + (jit(i+3) - 0.5) * 0.15;
+    }
   }
 
-  /* ══════════════════════════════════════════
-     STAGE 3 — GROWING TREE / BRANCHES
-     L-system style branching that grows live
-  ══════════════════════════════════════════ */
-  function makeTree() {
-    const group    = new THREE.Group();
-    const MAX_SEGS = window.innerWidth <= 768 ? 300 : 600;
-    const positions = new Float32Array(MAX_SEGS * 6);
-    let   segCount  = 0;
+  /* One target buffer per stage */
+  const shapes = [0,1,2,3].map(() => new Float32Array(COUNT * 3));
+  shapeSphere(shapes[0]);
+  shapeTorus(shapes[1]);
+  shapeHelix(shapes[2]);
+  shapeGalaxy(shapes[3]);
 
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
-    const mat = new THREE.LineBasicMaterial({ color: GREEN, transparent: true, opacity: 0.7 });
-    const lines = new THREE.LineSegments(geo, mat);
-    group.add(lines);
+  const home = new Float32Array(COUNT * 3);
+  const pos  = new Float32Array(COUNT * 3);
+  const vel  = new Float32Array(COUNT * 3);
+  const col  = new Float32Array(COUNT * 3);
+  home.set(shapes[0]);
+  pos.set(shapes[0]);
+  let activeShape = shapes[0];
 
-    /* Dot at each branch tip */
-    const tipPositions = new Float32Array(MAX_SEGS * 3);
-    const tipGeo = new THREE.BufferGeometry();
-    tipGeo.setAttribute('position', new THREE.BufferAttribute(tipPositions, 3).setUsage(THREE.DynamicDrawUsage));
-    const tipMat = new THREE.PointsMaterial({ color: GREEN_BRIGHT, size: 0.05, transparent: true, opacity: 0.9, sizeAttenuation: true });
-    group.add(new THREE.Points(tipGeo, tipMat));
-
-    /* Branch structure */
-    let branches = [{
-      x: 0, y: -2, z: 0,
-      dx: 0, dy: 0.04, dz: 0,
-      life: 1, depth: 0
-    }];
-    let grown = false;
-    let growT  = 0;
-
-    group._update = function(t) {
-      growT += 0.016;
-      if (growT < 0.5) return; /* wait half second before growing */
-
-      segCount = 0;
-      let tipCount = 0;
-
-      /* Spawn new branches */
-      if (!grown && branches.length < MAX_SEGS * 0.3) {
-        const newBranches = [];
-        branches.forEach(b => {
-          if (Math.random() < 0.015 && b.depth < 6) {
-            const angle  = (Math.random() - 0.5) * 1.2;
-            const angle2 = (Math.random() - 0.5) * 0.8;
-            const speed  = 0.03 + Math.random() * 0.02;
-            newBranches.push({
-              x: b.x, y: b.y, z: b.z,
-              dx: Math.sin(angle) * speed,
-              dy: Math.cos(angle) * speed * 0.8,
-              dz: Math.sin(angle2) * speed * 0.5,
-              life: 1,
-              depth: b.depth + 1
-            });
-          }
-        });
-        branches.push(...newBranches);
-        if (branches.length >= MAX_SEGS * 0.3) grown = true;
-      }
-
-      /* Update and draw branches */
-      branches.forEach(b => {
-        if (segCount >= MAX_SEGS - 1) return;
-        const ox = b.x, oy = b.y, oz = b.z;
-
-        /* Sway with noise */
-        b.dx += (Math.random() - 0.5) * 0.003;
-        b.dy += 0.0005; /* gravity resistance — grow up */
-        b.dz += (Math.random() - 0.5) * 0.002;
-
-        /* Speed limit per branch */
-        const spd = Math.sqrt(b.dx*b.dx + b.dy*b.dy + b.dz*b.dz);
-        if (spd > 0.05) { b.dx *= 0.05/spd; b.dy *= 0.05/spd; b.dz *= 0.05/spd; }
-
-        b.x += b.dx; b.y += b.dy; b.z += b.dz;
-        b.life -= 0.0008;
-
-        /* Draw segment */
-        positions[segCount*6]   = ox; positions[segCount*6+1] = oy; positions[segCount*6+2] = oz;
-        positions[segCount*6+3] = b.x; positions[segCount*6+4] = b.y; positions[segCount*6+5] = b.z;
-        segCount++;
-
-        /* Tip dot */
-        if (tipCount < MAX_SEGS) {
-          tipPositions[tipCount*3]   = b.x;
-          tipPositions[tipCount*3+1] = b.y;
-          tipPositions[tipCount*3+2] = b.z;
-          tipCount++;
-        }
-
-        /* Reset dead branches */
-        if (b.life <= 0 || Math.abs(b.y) > 2.5 || Math.abs(b.x) > 2.5) {
-          b.x = (Math.random()-0.5)*0.3; b.y = -2; b.z = (Math.random()-0.5)*0.3;
-          b.dx = (Math.random()-0.5)*0.02; b.dy = 0.03+Math.random()*0.02; b.dz = (Math.random()-0.5)*0.015;
-          b.life = 1; b.depth = 0;
-          grown = false;
-        }
-      });
-
-      geo.setDrawRange(0, segCount * 2);
-      geo.attributes.position.needsUpdate = true;
-      tipGeo.setDrawRange(0, tipCount);
-      tipGeo.attributes.position.needsUpdate = true;
-    };
-
-    return group;
-  }
-
-  /* ══════════════════════════════════════════
-     SCENE ASSEMBLY
-  ══════════════════════════════════════════ */
-  const stageObjects = [makeBlob(), makeDNA(), makeMurmuration(), makeTree()];
-  stageObjects.forEach((obj, i) => {
-    obj.visible = (i === 0);
-    scene.add(obj);
+  const orbGeo = new THREE.BufferGeometry();
+  orbGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+  orbGeo.setAttribute('color',    new THREE.BufferAttribute(col, 3).setUsage(THREE.DynamicDrawUsage));
+  const orbMat = new THREE.PointsMaterial({
+    size: 0.05, vertexColors: true, transparent: true, opacity: 0.95,
+    sizeAttenuation: true, depthWrite: false, blending: THREE.AdditiveBlending
   });
+  const orb = new THREE.Points(orbGeo, orbMat);
 
-  let currentStage  = 0;
-  let targetStage   = 0;
-  let morphProgress = 1;
+  const orbGroup = new THREE.Group();
+  orbGroup.add(orb);
+  scene.add(orbGroup);
 
+  /* ══════════════════════════════════════════
+     INTERACTION — drag to rotate, cursor to part the field
+  ══════════════════════════════════════════ */
+  let dragging = false;
+  let lastX = 0, lastY = 0;
+  let spinX = 0, spinY = 0;          /* rotational inertia */
+  let mClientX = -9999, mClientY = -9999;
+  let repelActive = false;
+  const pointerWorld = new THREE.Vector3();
+  const localPointer = new THREE.Vector3();
+
+  const REPEL_R = 0.95;
+  const REPEL_F = 0.06;
+
+  function onDown(e) {
+    if (e.pointerType === 'touch') return;   /* leave touch for page scroll */
+    dragging = true;
+    lastX = e.clientX; lastY = e.clientY;
+    document.body.classList.add('cursor-drag');
+  }
+  function onMove(e) {
+    mClientX = e.clientX; mClientY = e.clientY;
+    if (dragging) {
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      spinY = dx * 0.006;
+      spinX = dy * 0.006;
+      orbGroup.rotation.y += spinY;
+      orbGroup.rotation.x += spinX;
+      lastX = e.clientX; lastY = e.clientY;
+    }
+  }
+  function onUp() {
+    dragging = false;
+    document.body.classList.remove('cursor-drag');
+  }
+
+  if (visualPanel) visualPanel.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+
+  /* Project the cursor onto the z=0 plane in world space */
+  function updatePointer() {
+    const rect = aboutCanvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) { repelActive = false; return; }
+    const inside = mClientX >= rect.left && mClientX <= rect.right &&
+                   mClientY >= rect.top  && mClientY <= rect.bottom;
+    repelActive = inside;
+    if (!inside) return;
+    const nx =  ((mClientX - rect.left) / rect.width)  * 2 - 1;
+    const ny = -(((mClientY - rect.top) / rect.height) * 2 - 1);
+    pointerWorld.set(nx, ny, 0.5).unproject(camera);
+    pointerWorld.sub(camera.position).normalize();
+    const dist = -camera.position.z / pointerWorld.z;
+    pointerWorld.multiplyScalar(dist).add(camera.position);
+  }
+
+  /* ── per-stage form: morph the field into a new shape ── */
   function switchToStage(idx) {
-    if (idx === currentStage && morphProgress >= 1) return;
-    targetStage   = idx;
-    morphProgress = 0;
-    stageObjects[idx].visible = true;
+    activeShape = shapes[idx] || shapes[0];
   }
-
-  /* ── MOUSE ── */
-  let mouseX = 0, mouseY = 0;
-  document.addEventListener('mousemove', e => {
-    mouseX = (e.clientX / window.innerWidth  - 0.5) * 0.6;
-    mouseY = (e.clientY / window.innerHeight - 0.5) * 0.4;
-  });
 
   /* ── ANIMATE ── */
   const clock = new THREE.Clock();
-
-  function setOpacity(group, opacity) {
-    group.traverse(child => {
-      if (!child.material) return;
-      const mats = Array.isArray(child.material) ? child.material : [child.material];
-      mats.forEach(m => {
-        if (!m._base) m._base = m.opacity;
-        m.opacity = Math.max(0, Math.min(1, opacity * m._base));
-      });
-    });
-  }
 
   function animate() {
     requestAnimationFrame(animate);
     const t = clock.getElapsedTime();
 
-    /* Morph transition */
-    if (morphProgress < 1) {
-      morphProgress = Math.min(morphProgress + 0.03, 1);
-      const e = morphProgress < 0.5
-        ? 2 * morphProgress * morphProgress
-        : -1 + (4 - 2 * morphProgress) * morphProgress;
+    updatePointer();
 
-      stageObjects.forEach((obj, i) => {
-        if (i === currentStage) {
-          setOpacity(obj, 1 - e);
-          obj.scale.setScalar(1 - e * 0.1);
-        } else if (i === targetStage) {
-          setOpacity(obj, e);
-          obj.scale.setScalar(0.9 + e * 0.1);
+    /* Rotation: drag inertia + gentle idle spin */
+    if (!dragging) {
+      orbGroup.rotation.y += spinY;
+      orbGroup.rotation.x += spinX;
+      spinY *= 0.94; spinX *= 0.94;
+      orbGroup.rotation.y += 0.0016;
+    }
+    orbGroup.updateMatrixWorld();
+
+    /* Cursor in the orb's local space (group only rotates) */
+    if (repelActive) localPointer.copy(pointerWorld).applyMatrix4(
+      new THREE.Matrix4().copy(orbGroup.matrixWorld).invert()
+    );
+
+    const lx = localPointer.x, ly = localPointer.y, lz = localPointer.z;
+    const r2 = REPEL_R * REPEL_R;
+    const ms = 0.05;   /* shape-morph speed */
+
+    for (let i = 0; i < COUNT; i++) {
+      /* Morph each home point toward the active stage's shape */
+      home[i*3]   += (activeShape[i*3]   - home[i*3])   * ms;
+      home[i*3+1] += (activeShape[i*3+1] - home[i*3+1]) * ms;
+      home[i*3+2] += (activeShape[i*3+2] - home[i*3+2]) * ms;
+
+      let px = pos[i*3], py = pos[i*3+1], pz = pos[i*3+2];
+
+      /* Repel away from the cursor */
+      if (repelActive) {
+        const dx = px - lx, dy = py - ly, dz = pz - lz;
+        const d2 = dx*dx + dy*dy + dz*dz;
+        if (d2 < r2) {
+          const d = Math.sqrt(d2) + 1e-4;
+          const f = (1 - d / REPEL_R) * REPEL_F;
+          vel[i*3]   += (dx / d) * f;
+          vel[i*3+1] += (dy / d) * f;
+          vel[i*3+2] += (dz / d) * f;
         }
-      });
-
-      if (morphProgress >= 1) {
-        stageObjects[currentStage].visible = false;
-        setOpacity(stageObjects[currentStage], 1);
-        stageObjects[currentStage].scale.setScalar(1);
-        currentStage = targetStage;
       }
+
+      /* Spring toward home + subtle breathe */
+      const breathe = 1 + Math.sin(t * 0.8 + i * 0.05) * 0.01;
+      vel[i*3]   += (home[i*3]   * breathe - px) * 0.06;
+      vel[i*3+1] += (home[i*3+1] * breathe - py) * 0.06;
+      vel[i*3+2] += (home[i*3+2] * breathe - pz) * 0.06;
+
+      /* Damp */
+      vel[i*3] *= 0.85; vel[i*3+1] *= 0.85; vel[i*3+2] *= 0.85;
+
+      px += vel[i*3]; py += vel[i*3+1]; pz += vel[i*3+2];
+      pos[i*3] = px; pos[i*3+1] = py; pos[i*3+2] = pz;
+
+      /* Brightness rises with displacement from home */
+      const hx = px - home[i*3], hy = py - home[i*3+1], hz = pz - home[i*3+2];
+      const disp = Math.sqrt(hx*hx + hy*hy + hz*hz);
+      const b = 0.45 + Math.min(disp * 1.6, 1) * 0.55;
+      col[i*3] = baseR * b; col[i*3+1] = baseG * b; col[i*3+2] = baseB * b;
     }
 
-    /* Update active object */
-    const active = stageObjects[currentStage];
-    if (active) {
-      active._update?.(t);
-      /* Gentle mouse-follow rotation — stage 2 rotates differently */
-      if (currentStage === 0) {
-        active.rotation.y += 0.004 + mouseX * 0.01;
-        active.rotation.x += (mouseY * 0.3 - active.rotation.x) * 0.03;
-      } else if (currentStage === 1) {
-        active.rotation.y += 0.006;
-        active.rotation.x += (mouseY * 0.2 - active.rotation.x) * 0.03;
-      } else if (currentStage === 2) {
-        /* Murmuration — very slow base rotation */
-        active.rotation.y += 0.002 + mouseX * 0.008;
-      } else if (currentStage === 3) {
-        active.rotation.y += (mouseX * 0.4 - active.rotation.y) * 0.02;
-      }
-    }
-
-    /* Also update transitioning object if mid-morph */
-    if (morphProgress < 1 && stageObjects[targetStage] !== active) {
-      stageObjects[targetStage]?._update?.(t);
-    }
+    orbGeo.attributes.position.needsUpdate = true;
+    orbGeo.attributes.color.needsUpdate    = true;
 
     renderer.render(scene, camera);
   }
@@ -577,7 +399,6 @@
   const visualPanelEl = document.getElementById('about-visual-panel');
   if (visualPanelEl) {
     visualPanelEl.style.borderRight = 'none';
-    /* Let canvas bleed across — overflow visible */
     visualPanelEl.style.overflow = 'visible';
   }
 

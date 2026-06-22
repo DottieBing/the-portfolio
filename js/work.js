@@ -14,10 +14,11 @@ if (workEl) workEl.style.height = `calc(100vh + ${5 * 180}px)`;
   ────────────────────────────────────────────────────────── */
   const PROJECTS = [
     {
-      id:       'axiom',
+      id:       'obra',
       num:      '01',
-      title:    'AXIOM',
-      image: 'assets/images/axiom.jpg',
+      title:    'OBRA',
+      image: 'assets/images/obra.jpeg',
+      imageFull: 'assets/images/obra-full.jpeg',
       subtitle: 'Brand & Digital',
       tags:     ['Branding', 'Web Design', 'Motion'],
       featured: true,
@@ -34,6 +35,7 @@ if (workEl) workEl.style.height = `calc(100vh + ${5 * 180}px)`;
       num:      '02',
       title:    'VESPER',
       image: 'assets/images/vesper.jpg',
+      imageFull: 'assets/images/vesper-full.jpg',
       subtitle: 'Editorial Platform',
       tags:     ['UI/UX', 'Development'],
       featured: false,
@@ -50,6 +52,7 @@ if (workEl) workEl.style.height = `calc(100vh + ${5 * 180}px)`;
       num:      '03',
       title:    'NOOR',
       image: 'assets/images/noor.jpg',
+      imageFull: 'assets/images/noor-full.jpg',
       subtitle: 'WebGL Experience',
       tags:     ['WebGL', 'Creative Dev', '3D'],
       featured: true,
@@ -66,6 +69,7 @@ if (workEl) workEl.style.height = `calc(100vh + ${5 * 180}px)`;
       num:      '04',
       title:    'KOTA',
       image: 'assets/images/kota.jpg',
+      imageFull: 'assets/images/kota-full.jpg',
       subtitle: 'Motion Identity',
       tags:     ['Motion', 'Brand', 'Animation'],
       featured: false,
@@ -82,6 +86,7 @@ if (workEl) workEl.style.height = `calc(100vh + ${5 * 180}px)`;
       num:      '05',
       title:    'LUMA',
       image: 'assets/images/luma.jpg',
+      imageFull: 'assets/images/luma-full.jpg',
       subtitle: 'Product Design',
       tags:     ['Product', 'UI', 'Design System'],
       featured: false,
@@ -299,8 +304,14 @@ if (workEl) workEl.style.height = `calc(100vh + ${5 * 180}px)`;
     /* Build large canvas for overlay */
     expVisual.innerHTML = '';
     activeCanvas?._stop?.();
-    activeCanvas = makeVisualCanvas(proj, 800, 600);
-    expVisual.appendChild(activeCanvas);
+    expVisual.innerHTML = '';
+    if (proj.imageFull || proj.image) {
+      const img = document.createElement('img');
+      img.src = proj.imageFull || proj.image;
+      img.alt = proj.title;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+      expVisual.appendChild(img);
+    }
 
     /* Get card's screen position for clip-path origin */
     const card = track.querySelectorAll('.proj-card')[idx];

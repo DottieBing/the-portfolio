@@ -227,14 +227,34 @@
 });
 
   function fireSend() {
-    submitBtn?.classList.add('charging', 'sent');
-    if (submitText) {
-      submitText.textContent = 'Sent ✓';
-      setTimeout(() => { submitText.textContent = 'Message received'; }, 700);
+  const formData = new FormData(document.getElementById('contact-form'));
+
+  fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      submitBtn?.classList.add('sent');
+      if (submitText) {
+        submitText.textContent = 'Sent ✓';
+        setTimeout(() => { submitText.textContent = 'Message received'; }, 700);
+      }
+      /* Clear the form so the typed text no longer shows */
+      document.getElementById('contact-form')?.reset();
+      formFields.forEach(field => field.classList.remove('filled', 'focused'));
+      if (charCount && textarea) {
+        charCount.textContent = `0 / ${textarea.maxLength}`;
+      }
+    } else {
+      if (submitText) submitText.textContent = 'Something went wrong. Try again.';
     }
-    /* In production: replace with actual fetch/FormData POST */
-    console.log('Form submitted — wire to your backend here.');
-  }
+  })
+  .catch(() => {
+    if (submitText) submitText.textContent = 'Network error. Try again.';
+  });
+}
 
   /* ──────────────────────────────────────────────────────────
      FOOTER — staggered link reveal

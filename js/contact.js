@@ -192,37 +192,67 @@
     });
   }
 
+  const formError = document.getElementById('form-error');
+  let errorClearTimer = null;
+
+  function showError(msg) {
+    if (!formError) return;
+    formError.textContent = msg;
+    formError.classList.add('show');
+  }
+
+  function clearError() {
+    if (!formError) return;
+    formError.classList.remove('show');
+    clearTimeout(errorClearTimer);
+    /* Clear text only after the collapse transition finishes */
+    errorClearTimer = setTimeout(() => { formError.textContent = ''; }, 300);
+  }
+
+  function flagField(id) {
+    const field = document.getElementById(id)?.closest('.form-field');
+    if (!field) return;
+    field.style.transition = 'transform 0.1s';
+    field.style.transform  = 'translateX(10px)';
+    setTimeout(() => field.style.transform = 'translateX(-6px)', 100);
+    setTimeout(() => field.style.transform = 'translateX(4px)',  200);
+    setTimeout(() => field.style.transform = 'translateX(0)',    300);
+    const underline = field.querySelector('.field-underline');
+    if (underline) {
+      underline.style.setProperty('--underline-color', '#ff4444');
+      setTimeout(() => underline.style.removeProperty('--underline-color'), 1500);
+    }
+  }
+
   form?.addEventListener('submit', e => {
   e.preventDefault();
 
   const name    = document.getElementById('f-name')?.value.trim();
   const email   = document.getElementById('f-email')?.value.trim();
   const type    = document.getElementById('f-type')?.value.trim();
+  const budget  = document.getElementById('f-budget')?.value.trim();
   const message = document.getElementById('f-message')?.value.trim();
 
-  if (!name || !email || !type || !message) {
-    // Shake empty fields
-    [['f-name', name], ['f-email', email], ['f-type', type], ['f-message', message]].forEach(([id, val]) => {
-      if (!val) {
-        const field = document.getElementById(id)?.closest('.form-field');
-        if (field) {
-          field.style.transition = 'transform 0.1s';
-          field.style.transform  = 'translateX(10px)';
-          setTimeout(() => field.style.transform = 'translateX(-6px)', 100);
-          setTimeout(() => field.style.transform = 'translateX(4px)',  200);
-          setTimeout(() => field.style.transform = 'translateX(0)',    300);
-          // Flash the underline red
-          const underline = field.querySelector('.field-underline');
-          if (underline) {
-            underline.style.setProperty('--underline-color', '#ff4444');
-            setTimeout(() => underline.style.removeProperty('--underline-color'), 1500);
-          }
-        }
-      }
-    });
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '');
+
+  /* Specific, ordered validation — first failing rule is reported */
+  const checks = [
+    { id: 'f-name',    ok: !!name,                      msg: 'Please enter your name.' },
+    { id: 'f-email',   ok: !!email,                     msg: 'Please enter your email address.' },
+    { id: 'f-email',   ok: !email || emailValid,        msg: 'That email address doesn’t look valid — check for a typo (e.g. name@domain.com).' },
+    { id: 'f-type',    ok: !!type,                       msg: 'Please tell me what type of project this is.' },
+    { id: 'f-message', ok: !!message,                    msg: 'Please add a short message about your project.' },
+  ];
+
+  const failed = checks.filter(c => !c.ok);
+  if (failed.length) {
+    /* Shake each unique problem field */
+    [...new Set(failed.map(f => f.id))].forEach(flagField);
+    showError(failed[0].msg);
     return;
   }
 
+  clearError();
   fireSend();
 });
 
@@ -233,9 +263,10 @@
     method: 'POST',
     body: formData
   })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
+  .then(res => res.json().then(data => ({ ok: res.ok, data })))
+  .then(({ ok, data }) => {
+    if (ok && data.success) {
+      clearError();
       submitBtn?.classList.add('sent');
       if (submitText) {
         submitText.textContent = 'Sent ✓';
@@ -248,11 +279,12 @@
         charCount.textContent = `0 / ${textarea.maxLength}`;
       }
     } else {
-      if (submitText) submitText.textContent = 'Something went wrong. Try again.';
+      /* Surface the specific reason the server rejected the submission */
+      showError(data?.message || 'Your message couldn’t be sent. Please try again in a moment.');
     }
   })
   .catch(() => {
-    if (submitText) submitText.textContent = 'Network error. Try again.';
+    showError('Couldn’t reach the server — check your internet connection and try again.');
   });
 }
 

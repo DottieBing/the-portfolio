@@ -235,6 +235,26 @@
 .form-field.focused .field-charcount { opacity: 1; }
 
 /* ── SUBMIT ROW ── */
+/* Inline validation / server error message */
+.form-error {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  line-height: 1.6;
+  color: #ff6b6b;
+  margin-top: 20px;
+  min-height: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: opacity 0.3s, max-height 0.3s, margin-top 0.3s;
+}
+.form-error.show {
+  opacity: 1;
+  max-height: 80px;
+  margin-top: 24px;
+}
+
 .form-submit-row {
   display: flex;
   align-items: center;

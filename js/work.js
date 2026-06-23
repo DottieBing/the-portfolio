@@ -315,7 +315,7 @@ if (workEl) workEl.style.height = `calc(100vh + ${5 * 180}px)`;
   overlayEl.innerHTML = `
     <div id="expand-bg"></div>
     <button id="expand-close" aria-label="Close project">Close project</button>
-    <div id="expand-content">
+    <div id="expand-content" data-lenis-prevent>
       <div class="exp-visual" id="exp-visual"></div>
       <div class="exp-body">
         <p class="exp-eyebrow" id="exp-eyebrow"></p>

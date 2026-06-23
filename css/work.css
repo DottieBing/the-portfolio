@@ -379,3 +379,41 @@
   font-size: 16px;
   color: var(--offwhite);
 }
+
+/* ──────────────────────────────────────────────────────────
+   EXPAND OVERLAY — MOBILE
+   Stack to a single scrollable column so long descriptions
+   never compress or hide behind the image on short devices.
+────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #expand-content {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+    padding: 76px var(--page-pad) 64px;
+    align-content: start;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Keep the image a sensible, bounded size so text stays on screen */
+  .exp-visual {
+    aspect-ratio: 16 / 10;
+    max-height: 38vh;
+  }
+
+  .exp-title {
+    font-size: clamp(40px, 13vw, 64px);
+    margin-bottom: 18px;
+  }
+
+  .exp-desc {
+    font-size: 16px;
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+
+  .exp-meta {
+    gap: 14px;
+    padding-top: 22px;
+  }
+}
